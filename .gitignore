@@ -1,0 +1,12 @@
+# Pliki Python
+backend/venv/
+__pycache__/
+*.pyc
+
+# Pliki Node.js
+frontend/node_modules/
+frontend/.vite/
+
+# Pliki systemowe
+.DS_Store
+Thumbs.db
