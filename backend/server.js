@@ -19,16 +19,20 @@ app.get('/health', (req, res) => {
 // Stworzenie serwera WebSocket
 const wss = new WebSocket.Server({ server });
 
-// Mapowanie komend
+// Mapowanie komend - WAŻNE: Te same komendy muszą być używane w Webotsie
 const COMMAND_MAPPING = {
-    'FWD': 'forward',
-    'BACK': 'backward',
-    'LEFT': 'left',
-    'RIGHT': 'right',
-    'STOP': 'stop'
+    'FWD': 'FWD',     // Zmienione na dokładnie te same wartości, jakie oczekuje Webots
+    'BACK': 'BACK',
+    'LEFT': 'LEFT',
+    'RIGHT': 'RIGHT',
+    'STOP': 'STOP'
 };
 
-// Symulowany stan AGV
+// Lista klientów WebSocket
+let clients = new Set();
+let webotsClient = null;
+
+// Stan AGV
 let agvState = {
     position: { x: 0, y: 0 },
     orientation: 0,
@@ -40,56 +44,152 @@ let agvState = {
     warnings: []
 };
 
-// Symulacja połączenia z PLC
-const plcConnection = {
-    connected: false,
-    model: 'Siemens S7-1200',
-    lastCommand: null,
-    connect: function () {
-        this.connected = true;
-        console.log(`🔌 Połączono z PLC ${this.model}`);
-        return this.connected;
-    },
-    disconnect: function () {
-        this.connected = false;
-        console.log(`🔌 Rozłączono z PLC ${this.model}`);
-        return !this.connected;
-    },
-    sendCommand: function (command) {
-        if (!this.connected) {
-            return { success: false, error: 'PLC not connected' };
+// Funkcja do wykrywania czy połączenie jest od Webots
+function isWebotsConnection(req) {
+    const userAgent = req.headers['user-agent'] || '';
+    // Webots często używa prostego user-agenta lub nie używa w ogóle
+    return userAgent.includes('Python') || userAgent === '' || userAgent.includes('Webots');
+}
+
+// Funkcja wysyłająca wiadomość do wszystkich klientów z wyjątkiem Webots
+function broadcastToFrontend(message) {
+    const messageStr = typeof message === 'string' ? message : JSON.stringify(message);
+    clients.forEach(client => {
+        if (client !== webotsClient && client.readyState === WebSocket.OPEN) {
+            client.send(messageStr);
         }
+    });
+}
 
-        this.lastCommand = command;
-        console.log(`📨 Wysłano komendę do PLC: ${command}`);
-        return { success: true, command };
-    }
-};
+// Obsługa połączeń WebSocket
+wss.on('connection', (ws, req) => {
+    console.log('📱 Nowe połączenie nawiązane');
 
-// Próba połączenia z PLC przy starcie serwera
-plcConnection.connect();
+    // Dodanie klienta do listy
+    clients.add(ws);
 
-// Funkcja aktualizująca stan AGV
-function updateAgvState(command) {
-    // Zapisanie poprzedniej pozycji
-    const prevPosition = { ...agvState.position };
+    // Sprawdzenie czy połączenie pochodzi od Webots
+    const potentialWebotsClient = isWebotsConnection(req);
+    if (potentialWebotsClient) {
+        console.log('🤖 Wykryto połączenie od Webots');
+        webotsClient = ws;
 
-    // Symulacja czasu odpowiedzi PLC
-    const plcResponse = plcConnection.sendCommand(command);
-
-    if (!plcResponse.success) {
-        agvState.errors.push({
-            message: 'Nie można wykonać komendy - brak połączenia z PLC',
+        // Informacja dla klientów frontend, że Webots jest połączony
+        broadcastToFrontend({
+            type: 'webots_connected',
+            connected: true,
             timestamp: new Date().toISOString()
         });
-        return;
+    } else {
+        // Wysłanie początkowego statusu do klienta frontend
+        ws.send(JSON.stringify({
+            type: 'connection_status',
+            connected: true,
+            timestamp: new Date().toISOString()
+        }));
+
+        // Wysłanie początkowego stanu AGV
+        ws.send(JSON.stringify({
+            type: 'agv_status',
+            ...agvState
+        }));
     }
 
-    // Czyszczenie poprzednich błędów
-    agvState.errors = [];
+    // Obsługa wiadomości
+    ws.on('message', (messageData) => {
+        const message = messageData.toString();
 
+        // Jeśli to wiadomość od Webots (status, itp.) - można rozbudować w przyszłości
+        if (ws === webotsClient) {
+            try {
+                const parsedMessage = JSON.parse(message);
+                console.log('📊 Otrzymano dane z Webots:', parsedMessage);
+
+                // Tutaj można dodać obsługę statusu z Webots
+                // np. aktualizować agvState i rozsyłać do klientów
+
+                // Rozgłoszenie do frontendów
+                broadcastToFrontend({
+                    type: 'webots_data',
+                    data: parsedMessage,
+                    timestamp: new Date().toISOString()
+                });
+            } catch (e) {
+                // Jeśli to nie JSON, tylko informacja tekstowa
+                console.log('📝 Wiadomość z Webots:', message);
+            }
+            return;
+        }
+
+        // To jest wiadomość od frontendu z komendą
+        console.log(`📨 Otrzymano komendę: ${message}`);
+
+        // Sprawdzenie czy komenda jest prawidłowa
+        const command = COMMAND_MAPPING[message];
+
+        if (!command) {
+            ws.send(JSON.stringify({
+                type: 'error',
+                message: `Nieznana komenda: ${message}`
+            }));
+            return;
+        }
+
+        // Jeśli Webots jest połączony, przekaż komendę
+        if (webotsClient && webotsClient.readyState === WebSocket.OPEN) {
+            webotsClient.send(command);
+            console.log(`📤 Wysłano komendę do Webots: ${command}`);
+
+            // Potwierdzenie dla frontendu
+            ws.send(JSON.stringify({
+                type: 'command_response',
+                command: message,
+                success: true
+            }));
+
+            // Aktualizacja stanu (symulowana, docelowo powinna przychodzić z Webots)
+            updateAgvState(command);
+
+            // Wysłanie aktualizacji statusu do wszystkich klientów frontend
+            broadcastToFrontend({
+                type: 'agv_status',
+                ...agvState
+            });
+        } else {
+            // Brak połączenia z Webots
+            ws.send(JSON.stringify({
+                type: 'error',
+                message: 'Brak połączenia z Webots. Komenda nie może być wykonana.'
+            }));
+        }
+    });
+
+    // Obsługa rozłączenia
+    ws.on('close', () => {
+        console.log('📴 Połączenie zakończone');
+        clients.delete(ws);
+
+        // Jeśli to był Webots, oznacz jako rozłączony
+        if (ws === webotsClient) {
+            webotsClient = null;
+            console.log('🤖 Webots rozłączony');
+
+            // Informacja dla klientów frontend
+            broadcastToFrontend({
+                type: 'webots_connected',
+                connected: false,
+                timestamp: new Date().toISOString()
+            });
+        }
+    });
+});
+
+// Funkcja aktualizująca stan AGV (symulacja)
+// Ta funkcja będzie używana tylko do momentu, aż Webots zacznie wysyłać faktyczny stan
+/*
+function updateAgvState(command) {
     switch (command) {
-        case 'forward':
+        case 'FWD':
             agvState.isMoving = true;
             agvState.direction = 'forward';
             agvState.speed = 1.0;
@@ -100,7 +200,7 @@ function updateAgvState(command) {
             agvState.position.y -= Math.cos(radians);
             break;
 
-        case 'backward':
+        case 'BACK':
             agvState.isMoving = true;
             agvState.direction = 'backward';
             agvState.speed = 1.0;
@@ -111,15 +211,15 @@ function updateAgvState(command) {
             agvState.position.y += Math.cos(backRadians);
             break;
 
-        case 'left':
+        case 'LEFT':
             agvState.orientation = (agvState.orientation - 90 + 360) % 360;
             break;
 
-        case 'right':
+        case 'RIGHT':
             agvState.orientation = (agvState.orientation + 90) % 360;
             break;
 
-        case 'stop':
+        case 'STOP':
             agvState.isMoving = false;
             agvState.direction = 'none';
             agvState.speed = 0;
@@ -134,81 +234,8 @@ function updateAgvState(command) {
     if (agvState.isMoving) {
         agvState.batteryLevel = Math.max(0, agvState.batteryLevel - 0.1);
     }
-
-    // Symulacja przeszkody (co 10-ty ruch)
-    if (Math.random() < 0.1 && agvState.isMoving) {
-        agvState.warnings.push({
-            message: 'Wykryto potencjalną przeszkodę na trasie',
-            timestamp: new Date().toISOString()
-        });
-    } else {
-        agvState.warnings = [];
-    }
 }
-
-// Obsługa połączeń WebSocket
-wss.on('connection', (ws) => {
-    // Cichy log tylko przy połączeniu
-    console.log('📱 Nowe połączenie nawiązane');
-
-    // Wysłanie informacji o symulacji
-    ws.send(JSON.stringify({
-        type: 'mode',
-        simulation: true
-    }));
-
-    // Wysłanie statusu połączenia
-    ws.send(JSON.stringify({
-        type: 'connection_status',
-        connected: true,
-        timestamp: new Date().toISOString()
-    }));
-
-    // Wysłanie początkowego stanu AGV
-    ws.send(JSON.stringify({
-        type: 'agv_status',
-        ...agvState
-    }));
-
-    // Obsługa wiadomości
-    ws.on('message', (messageData) => {
-        const message = messageData.toString();
-
-        // Sprawdzenie czy komenda jest prawidłowa
-        const command = COMMAND_MAPPING[message];
-
-        if (!command) {
-            ws.send(JSON.stringify({
-                type: 'error',
-                message: `Nieznana komenda: ${message}`
-            }));
-            return;
-        }
-
-        // Aktualizacja stanu AGV na podstawie komendy
-        updateAgvState(command);
-
-        // Wysłanie odpowiedzi
-        ws.send(JSON.stringify({
-            type: 'command_response',
-            command: message,
-            success: true
-        }));
-
-        // Wysłanie aktualizacji statusu
-        ws.send(JSON.stringify({
-            type: 'agv_status',
-            ...agvState
-        }));
-    });
-
-    // Obsługa rozłączenia - tylko krótki log
-    ws.on('close', () => {
-        console.log('📴 Połączenie zakończone');
-    });
-});
-
-
+*/
 
 // Uruchomienie serwera HTTP
 const PORT = 8080;
