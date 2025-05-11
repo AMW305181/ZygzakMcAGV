@@ -37,7 +37,6 @@ interface StatusMessage {
 const App: React.FC = () => {
     const [webotsConnected, setWebotsConnected] = useState(false);
     const [lastCommandStatus, setLastCommandStatus] = useState<string | null>(null);
-    const [agvStatus, setAgvStatus] = useState<AgvStatus | null>(null);
 
     const { sendMessage, lastMessage, readyState } = useWebSocket(WS_URL, {
         onOpen: () => console.log("✅ WebSocket połączony"),
@@ -64,12 +63,6 @@ const App: React.FC = () => {
                 // Obsługa błędów
                 if (data.type === 'error') {
                     setLastCommandStatus(`Błąd: ${data.message}`);
-                }
-
-                // Aktualizacja stanu AGV
-                if (data.type === 'agv_status' && data.data) {
-                    const agvData = data.data as AgvStatus;
-                    setAgvStatus(agvData);
                 }
 
                 // Dane z Webots
@@ -129,19 +122,6 @@ const App: React.FC = () => {
                 </div>
             )}
 
-            <div className="status-panel">
-                <h3>Informacje o AGV</h3>
-                {agvStatus ? (
-                    <div className="agv-info">
-                        <p>Pozycja: X: {agvStatus.position?.x.toFixed(2)}, Y: {agvStatus.position?.y.toFixed(2)}</p>
-                        <p>Kierunek: {agvStatus.direction}</p>
-                        <p>Prędkość: {agvStatus.speed}</p>
-                        <p>Bateria: {agvStatus.batteryLevel}%</p>
-                    </div>
-                ) : (
-                    <p>Oczekiwanie na dane AGV...</p>
-                )}
-            </div>
         </div>
     );
 };
