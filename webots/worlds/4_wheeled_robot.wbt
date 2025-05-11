@@ -1,0 +1,350 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/containers/protos/WoodenBox.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/gctronic/e-puck/protos/E-puck.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/Floor.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/appearances/protos/OldSteel.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/appearances/protos/BakelitePlastic.proto"
+
+WorldInfo {
+  basicTimeStep 16
+  contactProperties [
+    ContactProperties {
+      material2 "dumbbell"
+      coulombFriction [
+        0
+      ]
+    }
+  ]
+}
+Viewpoint {
+  orientation -0.36093196178277565 -0.4169398970358716 0.8341997609825562 4.575403252629711
+  position -0.039802598123058 1.2699636654815032 1.5574784824089758
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+Floor {
+  size 1 1
+}
+WoodenBox {
+  translation 0.449079 0.447727 0.05
+  name "wooden box(2)"
+  size 0.1 0.1 0.1
+}
+WoodenBox {
+  translation -0.267501 0.357433 0.05
+  rotation 0 0 1 -0.261795307179586
+  size 0.1 0.1 0.1
+}
+WoodenBox {
+  translation -0.100187 -0.371292 0.05
+  rotation -2.0155799995834832e-05 -2.653569999451643e-06 0.9999999997933513 -0.261795307179586
+  name "wooden box(1)"
+  size 0.1 0.1 0.1
+}
+E-puck {
+  translation -0.259157116902756 -0.1660699767491537 -3.23252933212316e-05
+  rotation 0.0003996257528451177 0.0003617343571986489 -0.9999998547237455 1.6791833722497806
+  controller "epuck_avoid_collisions"
+}
+Robot {
+  translation 0.244225 -0.169293 0.04
+  rotation 0 -1 0 3.67802e-06
+  children [
+    DistanceSensor {
+      translation 0.104824 0.0193185 0
+      rotation 0 0 1 0.261799
+      children [
+        DEF sen_shape Shape {
+          appearance PBRAppearance {
+            baseColor 0 1 0
+            metalness 0
+          }
+          geometry Box {
+            size 0.01 0.01 0.01
+          }
+        }
+      ]
+      name "ds_left"
+      boundingObject USE sen_shape
+      physics Physics {
+      }
+    }
+    DistanceSensor {
+      translation 0.104974 -0.0247205 0
+      rotation 0 0 1 -0.4033953071795864
+      children [
+        DEF sen_shape Shape {
+          appearance PBRAppearance {
+            baseColor 0 1 0
+            metalness 0
+          }
+          geometry Box {
+            size 0.01 0.01 0.01
+          }
+        }
+      ]
+      name "ds_right"
+      boundingObject USE sen_shape
+      physics DEF sen_phys Physics {
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 1 0
+        anchor 0.05 0.06 0
+      }
+      device [
+        RotationalMotor {
+          name "wheel2"
+        }
+      ]
+      endPoint Solid {
+        translation 0.05 -0.06 0
+        rotation 1 0 0 1.57
+        children [
+          DEF WHEEL Shape {
+            appearance PBRAppearance {
+              baseColor 0 1 0
+              metalness 0
+            }
+            geometry Cylinder {
+              height 0.02
+              radius 0.04
+            }
+          }
+        ]
+        name "solid(1)"
+        boundingObject USE WHEEL
+        physics DEF PHYS Physics {
+        }
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 1 0
+        anchor -0.05 -0.06 0
+      }
+      device [
+        RotationalMotor {
+          name "wheel4"
+        }
+      ]
+      endPoint Solid {
+        translation -0.05 -0.06 0
+        rotation 1 0 0 1.57
+        children [
+          USE WHEEL
+        ]
+        name "solid(2)"
+        boundingObject USE WHEEL
+        physics USE PHYS
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 1 0
+        anchor -0.05 0.06 0
+      }
+      device [
+        RotationalMotor {
+          name "wheel3"
+        }
+      ]
+      endPoint Solid {
+        translation -0.05 0.06 0
+        rotation 1 0 0 1.57
+        children [
+          USE WHEEL
+        ]
+        name "solid(3)"
+        boundingObject USE WHEEL
+        physics USE PHYS
+      }
+    }
+    DEF BODY Shape {
+      appearance PBRAppearance {
+        baseColor 1 0 0
+        metalness 0
+      }
+      geometry Box {
+        size 0.2 0.1 0.06
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 1 0
+        anchor 0.05 0.06 0
+      }
+      device [
+        RotationalMotor {
+          name "wheel1"
+        }
+      ]
+      endPoint Solid {
+        translation 0.05 0.06 0
+        rotation 0.9999999999999999 0 0 1.5707
+        children [
+          DEF WHEEL_SHAPE Shape {
+            appearance PBRAppearance {
+              baseColor 0 1 0
+              metalness 0
+            }
+            geometry Cylinder {
+              height 0.02
+              radius 0.04
+            }
+          }
+        ]
+        boundingObject USE WHEEL_SHAPE
+        physics DEF WHEEL_PHYS Physics {
+        }
+      }
+    }
+  ]
+  boundingObject USE BODY
+  physics Physics {
+  }
+  controller "remote_agv"
+}
+Solid {
+  translation 0.2031979548692878 0.18691901938712677 0.024215224115432345
+  rotation -0.1975588694789308 -0.9603045325327628 -0.1969408487014278 1.6144216425191833
+  children [
+    DEF G0_GROUP Group {
+      children [
+        Pose {
+          translation 0.005 0 -0.05
+          children [
+            Shape {
+              appearance BakelitePlastic {
+              }
+              geometry Sphere {
+                radius 0.03
+                subdivision 2
+              }
+            }
+          ]
+        }
+        Pose {
+          translation 0.005 0 0.05
+          rotation 1 0 0 -0.261795307179586
+          children [
+            Shape {
+              appearance BakelitePlastic {
+              }
+              geometry Sphere {
+                radius 0.03
+                subdivision 2
+              }
+            }
+          ]
+          translationStep 0.1
+        }
+        Shape {
+          appearance BakelitePlastic {
+          }
+          geometry Cylinder {
+            height 0.1
+            radius 0.01
+          }
+        }
+      ]
+    }
+  ]
+  name "solid(2)"
+  contactMaterial "dumbbell"
+  boundingObject USE G0_GROUP
+  physics Physics {
+    density -1
+    mass 2
+    centerOfMass [
+      0 0 0.01
+    ]
+  }
+}
+Solid {
+  translation -0.14 -0.11 0.04958907968090999
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColorMap ImageTexture {
+          url [
+            "../../../Users/wojci/Desktop/red_brick_wall.jpg"
+          ]
+        }
+      }
+      geometry DEF BALL_GEOMETRY Sphere {
+        radius 0.05
+        subdivision 2
+      }
+    }
+  ]
+  boundingObject USE BALL_GEOMETRY
+  physics Physics {
+  }
+}
+Solid {
+  translation -0.0698077 0.1661 0.04958907968090999
+  children [
+    DEF SHAPE_GEOMETRY Shape {
+      appearance OldSteel {
+      }
+      geometry Sphere {
+        radius 0.05
+        subdivision 2
+      }
+    }
+  ]
+  name "solid(1)"
+  boundingObject USE SHAPE_GEOMETRY
+  physics Physics {
+  }
+}
+Solid {
+  translation 0.000721234 -0.495372 0.1
+  children [
+    DEF WALL_GEOMETRY Shape {
+      appearance PBRAppearance {
+        baseColor 0 0 1
+        roughness 0.5
+        metalness 0
+      }
+      geometry Box {
+        size 1 0.01 0.2
+      }
+    }
+  ]
+  name "DEF_WALL"
+  boundingObject USE WALL_GEOMETRY
+}
+Solid {
+  translation 0.506809 -0.00603284 0.1
+  rotation 0 0 1 1.5708
+  children [
+    USE WALL_GEOMETRY
+  ]
+  name "WALL2"
+  boundingObject USE WALL_GEOMETRY
+}
+Solid {
+  translation -0.00174283 0.496356 0.11
+  children [
+    USE WALL_GEOMETRY
+  ]
+  name "WALL3"
+  boundingObject USE WALL_GEOMETRY
+}
+Solid {
+  translation -0.496035 0.000329418 0.1
+  rotation 0 0 1 1.5708
+  children [
+    USE WALL_GEOMETRY
+  ]
+  name "WALL4"
+  boundingObject USE WALL_GEOMETRY
+}
