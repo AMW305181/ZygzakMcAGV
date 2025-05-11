@@ -10,3 +10,4 @@ frontend/.vite/
 # Pliki systemowe
 .DS_Store
 Thumbs.db
+/.vs/ZygzakMcAGV/FileContentIndex
