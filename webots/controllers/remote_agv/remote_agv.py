@@ -63,12 +63,12 @@ class WebotsClient:
                     
             #left
         elif command=='LEFT':
-                self.leftSpeed=1.0
-                self.rightSpeed=-1.0                
+                self.leftSpeed=-1.0
+                self.rightSpeed=1.0                
             #right
         elif command=='RIGHT':
-                self.leftSpeed=-1.0
-                self.rightSpeed=1.0
+                self.leftSpeed=1.0
+                self.rightSpeed=-1.0
             #back
         elif command=='BACK':               
                 self.leftSpeed=-1.0
