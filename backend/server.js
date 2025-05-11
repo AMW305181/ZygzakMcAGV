@@ -19,6 +19,11 @@ app.get('/health', (req, res) => {
 // Stworzenie serwera WebSocket
 const wss = new WebSocket.Server({ server });
 
+// Obsługa błędów WebSocket
+wss.on('error', (error) => {
+    console.error('❌ Błąd serwera WebSocket:', error);
+});
+
 // Mapowanie komend - WAŻNE: Te same komendy muszą być używane w Webotsie
 const COMMAND_MAPPING = {
     'FWD': 'FWD',     // Zmienione na dokładnie te same wartości, jakie oczekuje Webots
@@ -61,12 +66,36 @@ function broadcastToFrontend(message) {
     });
 }
 
+// Dodaj obsługę błędów dla połączeń WebSocket
+function setupWebSocketErrorHandling(ws) {
+    ws.on('error', (error) => {
+        console.error('❌ Błąd połączenia WebSocket:', error);
+
+        // Jeśli to był klient Webots, oznacz jako rozłączony
+        if (ws === webotsClient) {
+            console.log('🤖 Klient Webots rozłączony z powodu błędu');
+            webotsClient = null;
+
+            // Informacja dla klientów frontend
+            broadcastToFrontend({
+                type: 'webots_connected',
+                connected: false,
+                timestamp: new Date().toISOString(),
+                error: error.message
+            });
+        }
+    });
+}
+
 // Obsługa połączeń WebSocket
 wss.on('connection', (ws, req) => {
     console.log('📱 Nowe połączenie nawiązane');
 
     // Dodanie klienta do listy
     clients.add(ws);
+
+    // Dodaj obsługę błędów dla tego połączenia
+    setupWebSocketErrorHandling(ws);
 
     // Sprawdzenie czy połączenie pochodzi od Webots
     const potentialWebotsClient = isWebotsConnection(req);
@@ -137,24 +166,39 @@ wss.on('connection', (ws, req) => {
 
         // Jeśli Webots jest połączony, przekaż komendę
         if (webotsClient && webotsClient.readyState === WebSocket.OPEN) {
-            webotsClient.send(command);
-            console.log(`📤 Wysłano komendę do Webots: ${command}`);
+            try {
+                // Bezpośrednie wysłanie komendy bez modyfikacji
+                // To powinno zadziałać, jeśli kontroler Webots oczekuje prostego tekstu
+                webotsClient.send(command);
+                console.log(`📤 Wysłano komendę do Webots: ${command}`);
 
-            // Potwierdzenie dla frontendu
-            ws.send(JSON.stringify({
-                type: 'command_response',
-                command: message,
-                success: true
-            }));
 
-            // Aktualizacja stanu (symulowana, docelowo powinna przychodzić z Webots)
-            updateAgvState(command);
+                // Potwierdzenie dla frontendu
+                ws.send(JSON.stringify({
+                    type: 'command_response',
+                    command: message,
+                    success: true
+                }));
 
-            // Wysłanie aktualizacji statusu do wszystkich klientów frontend
-            broadcastToFrontend({
-                type: 'agv_status',
-                ...agvState
-            });
+                // Nie aktualizujemy stanu - zakładamy, że Webots sam zaktualizuje stan
+                // Jeśli Webots nie będzie wysyłał stanu, można odkomentować funkcję updateAgvState poniżej
+                // updateAgvState(command);
+
+                // Informacja o stanie dla wszystkich klientów frontend
+                // Możesz zakomentować tę linię, jeśli Webots sam wysyła aktualizacje stanu
+                broadcastToFrontend({
+                    type: 'command_sent',
+                    command: command,
+                    timestamp: new Date().toISOString()
+                });
+
+            } catch (error) {
+                console.error('❌ Błąd przy wysyłaniu komendy do Webots:', error);
+                ws.send(JSON.stringify({
+                    type: 'error',
+                    message: `Błąd komunikacji z Webots: ${error.message}`
+                }));
+            }
         } else {
             // Brak połączenia z Webots
             ws.send(JSON.stringify({
@@ -185,7 +229,8 @@ wss.on('connection', (ws, req) => {
 });
 
 // Funkcja aktualizująca stan AGV (symulacja)
-// Ta funkcja będzie używana tylko do momentu, aż Webots zacznie wysyłać faktyczny stan
+// Ta funkcja jest zakomentowana, ponieważ zakładamy, że Webots wysyła własne aktualizacje stanu
+// Odkomentuj, jeśli Webots nie wysyła statusu i chcesz symulować zmiany po komendach
 /*
 function updateAgvState(command) {
     switch (command) {
