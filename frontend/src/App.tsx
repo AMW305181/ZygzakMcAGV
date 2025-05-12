@@ -11,6 +11,7 @@ import {
 } from 'react-icons/fa';
 
 const WS_URL = "ws://localhost:8080";
+//const WS_URL = "ws://192.168.0.123:8080"; //tutaj adres ip kompa z symulatorem
 
 interface AgvStatus {
     position: {
