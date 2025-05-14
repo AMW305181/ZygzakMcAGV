@@ -283,7 +283,13 @@ function updateAgvState(command) {
 */
 
 // Uruchomienie serwera HTTP
+/*
 const PORT = 8080;
 server.listen(PORT, () => {
+    console.log(`🚀 Serwer uruchomiony na porcie ${PORT}`);
+});
+*/
+const PORT = 8080;
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Serwer uruchomiony na porcie ${PORT}`);
 });
