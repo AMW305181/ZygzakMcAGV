@@ -10,7 +10,6 @@ import {
 } from 'react-icons/fa';
 
 //const WS_URL = "ws://localhost:8080";
-
 const WS_URL = "ws://192.168.1.92:8080"; 
 
 interface AgvStatus {
