@@ -17,13 +17,13 @@ jobs:
         uses: actions/setup-node@v4
 
       - name: Install dependencies (frontend)
-        working-directory: ./fronted
+        working-directory: .\frontend
         run: npm ci
 
       - name: Build frontend (Vite)
-        working-directory: ./frontend
+        working-directory: .\frontend
         run: npm run build
 
       - name: Install backend dependencies
-        working-directory: ./backend
+        working-directory: .\backend
         run: npm ci
