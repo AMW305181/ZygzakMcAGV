@@ -75,6 +75,18 @@ const App: React.FC = () => {
         }
     }, [lastMessage]);
 
+    useEffect(() => {
+    const handleBeforeUnload = () => {
+        if (readyState === 1) {
+            sendMessage("STOP");
+        }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+}, [readyState]);
+
+    //Zatrzymaj pojazd po zamknięciu aplikacji
     const sendCommand = (command: string) => {
         sendMessage(command);
         setLastCommandStatus(`Wysłano: ${command}`);

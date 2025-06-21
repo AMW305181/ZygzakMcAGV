@@ -20,15 +20,15 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation -0.36093196178277565 -0.4169398970358716 0.8341997609825562 4.575403252629711
-  position -0.039802598123058 1.2699636654815032 1.5574784824089758
+  orientation -0.25713904776830593 -0.5035807878874292 0.8247944593554717 5.131068252739498
+  position -1.0872231187053525 1.3086765005930132 1.6375472873150987
 }
 TexturedBackground {
 }
 TexturedBackgroundLight {
 }
 Floor {
-  size 1 1
+  size 2 2
 }
 WoodenBox {
   translation 0.449079 0.447727 0.05
@@ -268,15 +268,11 @@ Solid {
   }
 }
 Solid {
-  translation -0.14 -0.11 0.04958907968090999
+  translation -0.456764 -0.56568 0.0495891
   children [
     Shape {
       appearance PBRAppearance {
-        baseColorMap ImageTexture {
-          url [
-            "../../../Users/wojci/Desktop/red_brick_wall.jpg"
-          ]
-        }
+        baseColor 1 0.666667 0
       }
       geometry DEF BALL_GEOMETRY Sphere {
         radius 0.05
@@ -289,7 +285,7 @@ Solid {
   }
 }
 Solid {
-  translation -0.0698077 0.1661 0.04958907968090999
+  translation 0.0592058 0.52525 0.0495891
   children [
     DEF SHAPE_GEOMETRY Shape {
       appearance OldSteel {
@@ -306,16 +302,16 @@ Solid {
   }
 }
 Solid {
-  translation 0.000721234 -0.495372 0.1
+  translation 0.00425095 -0.998698 0.1
   children [
     DEF WALL_GEOMETRY Shape {
       appearance PBRAppearance {
-        baseColor 0 0 1
+        baseColor 0.333333 0 0
         roughness 0.5
         metalness 0
       }
       geometry Box {
-        size 1 0.01 0.2
+        size 2 0.01 0.2
       }
     }
   ]
@@ -323,7 +319,7 @@ Solid {
   boundingObject USE WALL_GEOMETRY
 }
 Solid {
-  translation 0.506809 -0.00603284 0.1
+  translation 0.997214 -0.000794944 0.1
   rotation 0 0 1 1.5708
   children [
     USE WALL_GEOMETRY
@@ -332,7 +328,7 @@ Solid {
   boundingObject USE WALL_GEOMETRY
 }
 Solid {
-  translation -0.00174283 0.496356 0.11
+  translation -0.000209624 1.00763 0.11
   children [
     USE WALL_GEOMETRY
   ]
@@ -340,7 +336,7 @@ Solid {
   boundingObject USE WALL_GEOMETRY
 }
 Solid {
-  translation -0.496035 0.000329418 0.1
+  translation -0.997023 0.00696651 0.1
   rotation 0 0 1 1.5708
   children [
     USE WALL_GEOMETRY
