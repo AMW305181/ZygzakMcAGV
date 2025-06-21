@@ -1,4 +1,4 @@
-# Instukcja użytkownika
+# Instrukcja użytkownika
 
 Instrukcja przewiduje uruchomienie serwera na systemie Windows - z samej aplikacji można korzystać na innych urządzeniach w tej samej sieci.
 
