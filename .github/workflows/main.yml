@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: windows-latest
 
     steps:
@@ -17,13 +17,13 @@ jobs:
         uses: actions/setup-node@v4
 
       - name: Install dependencies (frontend)
-        working-directory: ./client
+        working-directory: .\frontend
         run: npm ci
 
       - name: Build frontend (Vite)
-        working-directory: ./client
+        working-directory: .\frontend
         run: npm run build
 
       - name: Install backend dependencies
-        working-directory: ./server
+        working-directory: .\backend
         run: npm ci
